@@ -163,7 +163,7 @@ async def login(credentials: UserLogin):
     return TokenResponse(token=token, user=user)
 
 # Expense Routes
-@api_router.post("/expenses", response_model=Expense)
+@api_router.post("/expenses", response_model=Expense, status_code=status.HTTP_201_CREATED)
 async def create_expense(expense_data: ExpenseCreate, user_id: str = Depends(get_current_user)):
     expense_id = str(uuid.uuid4())
     expense_doc = {
