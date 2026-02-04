@@ -153,6 +153,20 @@ export default function Expenses({ user, onLogout }) {
           </div>
         </div>
 
+        {/* CSV Download Section */}
+        <Card className="shadow-sm rounded-xl border-border mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold mb-1">Export Expenses</h3>
+                <p className="text-sm text-muted-foreground">Download your expenses as CSV</p>
+              </div>
+              <DownloadCSV variant="default" />
+            </div>
+          </CardContent>
+        </Card>
+
+
         <Card className="shadow-sm rounded-xl border-border">
           <CardHeader>
             <CardTitle style={{ fontFamily: 'Manrope, sans-serif' }}>
