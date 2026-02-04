@@ -255,6 +255,20 @@ export default function Dashboard({ user, onLogout }) {
           </Card>
         </div>
 
+        {/* CSV Download Section */}
+        <Card className="shadow-sm rounded-xl border-border mb-8">
+          <CardHeader>
+            <CardTitle style={{ fontFamily: 'Manrope, sans-serif' }}>Export Monthly Expenses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <p className="text-sm text-muted-foreground">Download your expenses as CSV for any month</p>
+              <DownloadCSV variant="outline" />
+            </div>
+          </CardContent>
+        </Card>
+
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card className="shadow-sm rounded-xl border-border">
             <CardHeader>
