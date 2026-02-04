@@ -1,7 +1,11 @@
-{
+  {
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+  "ajv": "^8.0.0",
+  "ajv-keywords": "^5.0.0"
+   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
     "@radix-ui/react-accordion": "^1.2.8",
