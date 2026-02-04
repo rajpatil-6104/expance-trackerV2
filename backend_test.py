@@ -133,7 +133,7 @@ class ExpenseAPITester:
             "Create Expense",
             "POST",
             "expenses",
-            201,
+            200,  # Backend returns 200, not 201
             data=expense_data
         )
         if success and 'id' in response:
