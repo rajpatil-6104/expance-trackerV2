@@ -227,6 +227,70 @@ async def delete_expense(expense_id: str, user_id: str = Depends(get_current_use
         raise HTTPException(status_code=404, detail="Expense not found")
     return {"message": "Expense deleted successfully"}
 
+@api_router.get("/expenses/export/csv")
+async def export_expenses_csv(
+    month: int,
+    year: int,
+    user_id: str = Depends(get_current_user)
+):
+    """
+    Export expenses for a specific month/year as CSV file
+    """
+    # Create date range for the month
+    start_date = f"{year}-{month:02d}-01"
+    
+    # Calculate last day of month
+    if month == 12:
+        next_month = f"{year + 1}-01-01"
+    else:
+        next_month = f"{year}-{month + 1:02d}-01"
+    
+    # Query expenses for the month
+    query = {
+        "user_id": user_id,
+        "date": {
+            "$gte": start_date,
+            "$lt": next_month
+        }
+    }
+    
+    expenses = await db.expenses.find(query, {"_id": 0}).sort("date", 1).to_list(10000)
+    
+    # Create CSV in memory
+    output = io.StringIO()
+    if expenses:
+        # Write CSV with all fields
+        fieldnames = ['id', 'date', 'description', 'category', 'amount', 'created_at']
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        
+        for expense in expenses:
+            writer.writerow({
+                'id': expense.get('id', ''),
+                'date': expense.get('date', ''),
+                'description': expense.get('description', ''),
+                'category': expense.get('category', ''),
+                'amount': expense.get('amount', 0),
+                'created_at': expense.get('created_at', '')
+            })
+    else:
+        # Write empty CSV with headers
+        writer = csv.writer(output)
+        writer.writerow(['id', 'date', 'description', 'category', 'amount', 'created_at'])
+    
+    # Prepare response
+    output.seek(0)
+    filename = f"expenses_{year}_{month:02d}.csv"
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
+
 # Analytics Routes
 @api_router.get("/analytics/summary", response_model=AnalyticsSummary)
 async def get_analytics_summary(
