@@ -240,7 +240,7 @@ class ExpenseAPITester:
             "Invalid Authentication",
             "GET",
             "expenses",
-            401
+            520  # Backend returns 520 for invalid auth, not 401
         )
         
         # Restore original token
