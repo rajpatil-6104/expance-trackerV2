@@ -101,3 +101,119 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Add functionality to download monthly expenses in CSV format"
+
+backend:
+  - task: "CSV Export Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Created new endpoint GET /api/expenses/export/csv that:
+          - Accepts month and year as query parameters
+          - Filters expenses for the specified month
+          - Returns CSV file with all expense fields (id, date, description, category, amount, created_at)
+          - Uses StreamingResponse with proper CSV headers
+          - Automatically names file as expenses_YYYY_MM.csv
+
+frontend:
+  - task: "CSV Download Component"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/DownloadCSV.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Created reusable DownloadCSV component with:
+          - Month selector (dropdown with all 12 months)
+          - Year selector (last 5 years)
+          - Default selection: current month and year
+          - Download button that triggers API call
+          - Proper blob handling for CSV download
+          - Success/error toast notifications
+
+  - task: "Dashboard CSV Integration"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/Dashboard.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Added CSV export section to Dashboard:
+          - New card with "Export Monthly Expenses" title
+          - Includes DownloadCSV component with outline variant
+          - Positioned after statistics cards, before charts
+          - Provides clear context about the feature
+
+  - task: "Expenses Page CSV Integration"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/Expenses.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Added CSV export section to Expenses page:
+          - New card positioned above expense list
+          - Includes DownloadCSV component
+          - Clear "Export Expenses" heading with description
+          - Allows users to download filtered or all expenses by month
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "CSV Export Endpoint"
+    - "CSV Download Component"
+    - "Dashboard CSV Integration"
+    - "Expenses Page CSV Integration"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      Implementation complete for monthly expense CSV download feature:
+      
+      BACKEND:
+      - Added /api/expenses/export/csv endpoint
+      - Filters by month/year parameters
+      - Returns properly formatted CSV with all expense fields
+      
+      FRONTEND:
+      - Created reusable DownloadCSV component
+      - Added to both Dashboard and Expenses pages
+      - Month/year selectors default to current month
+      - Proper CSV file download handling
+      
+      READY FOR TESTING:
+      Please test the following scenarios:
+      1. Download CSV from Dashboard for current month
+      2. Download CSV from Expenses page for different months
+      3. Verify CSV contains all fields: id, date, description, category, amount, created_at
+      4. Test with empty months (should return CSV with headers only)
+      5. Test month/year selector functionality
+      6. Verify file naming: expenses_YYYY_MM.csv
