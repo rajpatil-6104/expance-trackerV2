@@ -21,6 +21,7 @@ const CATEGORIES = [
   'Shopping',
   'Health',
   'Bills',
+  'Rent',
   'Others'
 ];
 
