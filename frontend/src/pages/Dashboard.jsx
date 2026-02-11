@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Wallet, Plus, TrendingUp, DollarSign, List, LogOut } from 'lucide-react';
+import { Wallet, Plus, TrendingUp, DollarSign, List, LogOut,IndianRupee } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import DownloadCSV from '../components/DownloadCSV';
 
@@ -219,11 +219,11 @@ export default function Dashboard({ user, onLogout }) {
           <Card className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl border-border hover-lift">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Expenses</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <IndianRupee className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="total-expenses" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                ${analytics?.total_expenses.toFixed(2) || '0.00'}
+                ₹{analytics?.total_expenses.toFixed(2) || '0.00'}
               </div>
               <p className="text-xs text-muted-foreground mt-1">All time</p>
             </CardContent>
@@ -346,7 +346,7 @@ export default function Dashboard({ user, onLogout }) {
                         {expense.category} • {new Date(expense.date).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="text-lg font-semibold">${expense.amount.toFixed(2)}</div>
+                    <div className="text-lg font-semibold">₹{expense.amount.toFixed(2)}</div>
                   </div>
                 ))}
               </div>
