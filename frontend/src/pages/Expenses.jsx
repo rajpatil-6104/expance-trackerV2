@@ -207,7 +207,7 @@ export default function Expenses({ user, onLogout }) {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEdit(expense)}
-                          data-testid={`edit-expense-${expense.id}`}
+                          data-testid={`edit-expense-₹{expense.id}`}
                           className="hover:bg-primary/10 hover:text-primary"
                         >
                           <Pencil className="h-4 w-4" />
@@ -219,7 +219,7 @@ export default function Expenses({ user, onLogout }) {
                             setSelectedExpense(expense);
                             setDeleteDialog(true);
                           }}
-                          data-testid={`delete-expense-${expense.id}`}
+                          data-testid={`delete-expense-₹{expense.id}`}
                           className="hover:bg-destructive/10 hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
