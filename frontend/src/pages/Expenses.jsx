@@ -200,7 +200,7 @@ export default function Expenses({ user, onLogout }) {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-xl font-semibold" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                        ${expense.amount.toFixed(2)}
+                        ₹{expense.amount.toFixed(2)}
                       </div>
                       <div className="flex gap-2">
                         <Button
