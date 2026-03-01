@@ -199,7 +199,7 @@ export default function Dashboard({ user, onLogout }) {
                         data-testid="expense-date-input"
                         type="date"
                         value={expenseData.date}
-                        onChange={(e) => setExpenseData({ ...expenseData, date: e.target.value })}
+                        onChange={(e) => setExpenseData({ ...expenseData, date: e.target.value })} 
                         required
                       />
                     </div>
