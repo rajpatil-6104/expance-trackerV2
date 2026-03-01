@@ -374,6 +374,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Wallet, Plus, TrendingUp, DollarSign, List, LogOut,IndianRupee } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import DownloadCSV from '../components/DownloadCSV';
+import { Months } from 'react-day-picker';
 
 const CATEGORIES = [
   'Food',
@@ -486,6 +487,25 @@ const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
   value: monthlyCategoryMap[cat],
   color: COLORS[idx % COLORS.length]
 }));
+
+//function for the total expenses of the month in new function
+//const currentMonth = new Date().toISOString().slice(0, 7);
+
+// Filter expenses of the current month
+const monthlyExpenses = recentExpenses.filter(exp =>
+  exp.date.startsWith(currentMonth)
+);
+
+// Total spent this month
+const monthlyTotal = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+// Total transactions this month
+const monthlyCount = monthlyExpenses.length;
+
+// Categories used this month
+const monthlyCategories = new Set(
+  monthlyExpenses.map(exp => exp.category)
+).size;
 
   return (
     <div className="min-h-screen bg-background">
@@ -617,7 +637,8 @@ const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="total-expenses" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                ₹{analytics?.total_expenses.toFixed(2) || '0.00'}
+              {/*  ₹{analytics?.total_expenses.toFixed(2) || '0.00'}{/*updated*/}
+              ₹{monthlyTotal.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">All time</p>
             </CardContent>
@@ -630,7 +651,7 @@ const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="transaction-count" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                {analytics?.expense_count || 0}
+                {monthlyCount}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Total recorded</p>
             </CardContent>
@@ -643,7 +664,7 @@ const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="category-count" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                {analytics?.categories.length || 0}
+                {monthlyCategories}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Active categories</p>
             </CardContent>
@@ -755,4 +776,5 @@ const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
     </div>
   );
 }
+
 
