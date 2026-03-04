@@ -466,7 +466,8 @@ const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-lg text-muted-foreground">Loading...</div>
+        {/*<div className="text-lg text-muted-foreground">Loading...</div>*/}
+        <div className="loader"></div>
       </div>
     );
   }
