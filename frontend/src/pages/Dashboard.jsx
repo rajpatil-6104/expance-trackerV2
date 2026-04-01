@@ -1,4 +1,4 @@
-/*import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '../App';
@@ -103,7 +103,7 @@ const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        {/*<div className="text-lg text-muted-foreground">Loading...</div>
+        {/*<div className="text-lg text-muted-foreground">Loading...</div>*/}
         <div className="loader"></div>
       </div>
     );
@@ -299,7 +299,7 @@ const monthlyCategories = new Set(
           </Card>
         </div>
 
-        {/* CSV Download Section 
+        {/* CSV Download Section */}
         <Card className="shadow-sm rounded-xl border-border mb-8">
           <CardHeader>
             <CardTitle style={{ fontFamily: 'Manrope, sans-serif' }}>Export Monthly Expenses</CardTitle>
@@ -403,7 +403,8 @@ const monthlyCategories = new Set(
       </main>
     </div>
   );
-}*/
+}
+/*
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -516,7 +517,7 @@ export default function Dashboard({ user, onLogout }) {
   return (
     <div className="min-h-screen bg-background">
 
-      {/* HEADER */}
+     
       <header className="bg-white border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -535,10 +536,9 @@ export default function Dashboard({ user, onLogout }) {
         </div>
       </header>
 
-      {/* MAIN */}
+  
       <main className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
 
-        {/* TOP SECTION */}
         <div className="flex flex-col sm:flex-row sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-2xl sm:text-4xl font-bold">Dashboard</h2>
@@ -628,7 +628,6 @@ export default function Dashboard({ user, onLogout }) {
           </div>
         </div>
 
-        {/* STATS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
 
           <Card>
@@ -666,7 +665,6 @@ export default function Dashboard({ user, onLogout }) {
           </Card>
         </div>
 
-        {/* CSV */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Export</CardTitle>
@@ -676,7 +674,6 @@ export default function Dashboard({ user, onLogout }) {
           </CardContent>
         </Card>
 
-        {/* CHARTS */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
 
           <Card>
@@ -713,7 +710,6 @@ export default function Dashboard({ user, onLogout }) {
           </Card>
         </div>
 
-        {/* RECENT */}
         <Card>
           <CardHeader>
             <CardTitle>Recent</CardTitle>
@@ -743,4 +739,5 @@ export default function Dashboard({ user, onLogout }) {
   );
 }
 
+*/}
 
