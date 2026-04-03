@@ -8,10 +8,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Wallet, Plus, TrendingUp, DollarSign, List, LogOut,IndianRupee } from 'lucide-react';
+import { Wallet, Plus, TrendingUp, DollarSign, List, LogOut, IndianRupee } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import DownloadCSV from '../components/DownloadCSV';
-import { Months } from 'react-day-picker';
 
 const CATEGORIES = [
   'Food',
@@ -21,11 +20,11 @@ const CATEGORIES = [
   'Shopping',
   'Health',
   'Bills',
-  'Rent' ,
+  'Rent',
   'Others'
 ];
 
-const COLORS = ['#2F5E41', '#D97706', '#E8F3E8', '#78716C', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'];
+const COLORS = ['#2F5E41', '#D97706', '#44f744', '#78716C', '#0bf5f5', '#61c9a6', '#3B82F6', '#8B5CF6', '#EC4899'];
 
 export default function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
@@ -39,15 +38,6 @@ export default function Dashboard({ user, onLogout }) {
     description: '',
     date: new Date().toISOString().split('T')[0]
   });
-  const monthlyTotals = recentExpenses.reduce((acc, expense) => {
-  const month = new Date(expense.date).toLocaleString("default", {
-    month: "short",
-    year: "numeric",
-  });
-
-  acc[month] = (acc[month] || 0) + expense.amount;
-  return acc;
-}, {});
 
   const fetchData = async () => {
     try {
@@ -56,8 +46,7 @@ export default function Dashboard({ user, onLogout }) {
         api.get('/expenses')
       ]);
       setAnalytics(analyticsRes.data);
-      //setRecentExpenses(expensesRes.data.slice(0, 5));//i ahve change this line of code 
-      setRecentExpenses(expensesRes.data);
+      setRecentExpenses(expensesRes.data.slice(0, 5));
     } catch (error) {
       toast.error('Failed to fetch data');
     } finally {
@@ -68,16 +57,6 @@ export default function Dashboard({ user, onLogout }) {
   useEffect(() => {
     fetchData();
   }, []);
-
-  //Function to handel to show the data of the expenses in the form of the pie chart and bar chart
-  const currentMonth = new Date().toISOString().slice(0, 7); // "2025-02"
-
-const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
-  if (exp.date.startsWith(currentMonth)) {
-    acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
-  }
-  return acc;
-}, {});
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
@@ -103,37 +82,17 @@ const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        {/*<div className="text-lg text-muted-foreground">Loading...</div>*/}
+        
         <div className="loader"></div>
       </div>
     );
   }
 
- 
- const pieData = Object.keys(monthlyCategoryMap).map((cat, idx) => ({
-  name: cat,
-  value: monthlyCategoryMap[cat],
-  color: COLORS[idx % COLORS.length]
-}));
-
-//function for the total expenses of the month in new function
-//const currentMonth = new Date().toISOString().slice(0, 7);
-
-// Filter expenses of the current month
-const monthlyExpenses = recentExpenses.filter(exp =>
-  exp.date.startsWith(currentMonth)
-);
-
-// Total spent this month
-const monthlyTotal = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-
-// Total transactions this month
-const monthlyCount = monthlyExpenses.length;
-
-// Categories used this month
-const monthlyCategories = new Set(
-  monthlyExpenses.map(exp => exp.category)
-).size;
+  const pieData = analytics?.categories.map((cat, idx) => ({
+    name: cat.category,
+    value: cat.total,
+    color: COLORS[idx % COLORS.length]
+  })) || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -265,8 +224,7 @@ const monthlyCategories = new Set(
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="total-expenses" style={{ fontFamily: 'Manrope, sans-serif' }}>
-            
-              ₹{monthlyTotal.toFixed(2)}
+                ₹{analytics?.total_expenses.toFixed(2) || '0.00'}
               </div>
               <p className="text-xs text-muted-foreground mt-1">All time</p>
             </CardContent>
@@ -279,7 +237,7 @@ const monthlyCategories = new Set(
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="transaction-count" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                {monthlyCount}
+                {analytics?.expense_count || 0}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Total recorded</p>
             </CardContent>
@@ -292,7 +250,7 @@ const monthlyCategories = new Set(
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="category-count" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                {monthlyCategories}
+                {analytics?.categories.length || 0}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Active categories</p>
             </CardContent>
@@ -404,340 +362,3 @@ const monthlyCategories = new Set(
     </div>
   );
 }
-/*
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { api } from '../App';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog, DialogContent, DialogDescription,
-  DialogFooter, DialogHeader, DialogTitle, DialogTrigger
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue
-} from '@/components/ui/select';
-import {
-  Wallet, Plus, TrendingUp, List,
-  LogOut, IndianRupee
-} from 'lucide-react';
-import {
-  PieChart, Pie, Cell,
-  ResponsiveContainer, BarChart, Bar,
-  XAxis, YAxis, Tooltip
-} from 'recharts';
-import DownloadCSV from '../components/DownloadCSV';
-
-const CATEGORIES = [
-  'Food','Transport','Utilities','Entertainment',
-  'Shopping','Health','Bills','Rent','Others'
-];
-
-const COLORS = [
-  '#2F5E41','#D97706','#44f744','#78716C',
-  '#0bf5f5','#61c9a6','#3B82F6','#8B5CF6','#EC4899'
-];
-
-export default function Dashboard({ user, onLogout }) {
-  const navigate = useNavigate();
-
-  const [analytics, setAnalytics] = useState(null);
-  const [recentExpenses, setRecentExpenses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const [expenseData, setExpenseData] = useState({
-    amount: '',
-    category: 'Food',
-    description: '',
-    date: new Date().toISOString().split('T')[0]
-  });
-
-  const fetchData = async () => {
-    try {
-      const [analyticsRes, expensesRes] = await Promise.all([
-        api.get('/analytics/summary'),
-        api.get('/expenses')
-      ]);
-      setAnalytics(analyticsRes.data);
-      setRecentExpenses(expensesRes.data.slice(0, 5));
-    } catch {
-      toast.error('Failed to fetch data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleAddExpense = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/expenses', {
-        ...expenseData,
-        amount: parseFloat(expenseData.amount)
-      });
-
-      toast.success('Expense added!');
-      setDialogOpen(false);
-
-      setExpenseData({
-        amount: '',
-        category: 'Food',
-        description: '',
-        date: new Date().toISOString().split('T')[0]
-      });
-
-      fetchData();
-    } catch {
-      toast.error('Failed to add expense');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="loader"></div>
-      </div>
-    );
-  }
-
-  const pieData = analytics?.categories.map((cat, idx) => ({
-    name: cat.category,
-    value: cat.total,
-    color: COLORS[idx % COLORS.length]
-  })) || [];
-
-  return (
-    <div className="min-h-screen bg-background">
-
-     
-      <header className="bg-white border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary p-2 rounded-lg">
-              <Wallet className="h-5 w-5 text-white" />
-            </div>
-            <h1 className="text-lg sm:text-2xl font-bold">ExpenseZen</h1>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-4">
-            <span className="text-xs sm:text-sm">Hi, {user?.name}</span>
-            <Button variant="ghost" size="sm" onClick={onLogout}>
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </header>
-
-  
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
-
-        <div className="flex flex-col sm:flex-row sm:justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-2xl sm:text-4xl font-bold">Dashboard</h2>
-            <p className="text-sm text-muted-foreground">
-              Your expense overview
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/expenses')}
-              className="w-full sm:w-auto"
-            >
-              <List className="mr-2 h-4 w-4" />
-              View Expenses
-            </Button>
-
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add
-                </Button>
-              </DialogTrigger>
-
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Expense</DialogTitle>
-                  <DialogDescription>Enter details</DialogDescription>
-                </DialogHeader>
-
-                <form onSubmit={handleAddExpense}>
-                  <div className="space-y-3 py-2">
-
-                    <Input
-                      placeholder="Amount"
-                      type="number"
-                      value={expenseData.amount}
-                      onChange={(e) =>
-                        setExpenseData({ ...expenseData, amount: e.target.value })
-                      }
-                      required
-                    />
-
-                    <Select
-                      value={expenseData.category}
-                      onValueChange={(value) =>
-                        setExpenseData({ ...expenseData, category: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map((cat) => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Input
-                      placeholder="Description"
-                      value={expenseData.description}
-                      onChange={(e) =>
-                        setExpenseData({ ...expenseData, description: e.target.value })
-                      }
-                      required
-                    />
-
-                    <Input
-                      type="date"
-                      value={expenseData.date}
-                      onChange={(e) =>
-                        setExpenseData({ ...expenseData, date: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-
-                  <DialogFooter>
-                    <Button type="submit">Add Expense</Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-
-          <Card>
-            <CardHeader className="flex justify-between">
-              <CardTitle>Total</CardTitle>
-              <IndianRupee />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-3xl font-bold">
-                ₹{analytics?.total_expenses.toFixed(2)}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Transactions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-3xl">
-                {analytics?.expense_count}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Categories</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-3xl">
-                {analytics?.categories.length}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Export</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DownloadCSV />
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Categories</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={pieData} dataKey="value">
-                    {pieData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={analytics?.monthly_trend}>
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="amount" fill="#2F5E41" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentExpenses.map((exp) => (
-              <div
-                key={exp.id}
-                className="flex flex-col sm:flex-row justify-between p-3 border rounded-lg mb-2"
-              >
-                <div>
-                  <p>{exp.description}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {exp.category}
-                  </p>
-                </div>
-                <div className="font-semibold">
-                  ₹{exp.amount}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-      </main>
-    </div>
-  );
-}
-
-*/}
-
