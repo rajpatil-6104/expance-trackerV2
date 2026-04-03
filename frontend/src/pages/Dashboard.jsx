@@ -224,7 +224,7 @@ export default function Dashboard({ user, onLogout }) {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="total-expenses" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                ₹{analytics?.total_expenses.toFixed(2) || '0.00'}
+                ₹{analytics?.current_month_expenses.toFixed(2) || '0.00'}
               </div>
               <p className="text-xs text-muted-foreground mt-1">All time</p>
             </CardContent>
