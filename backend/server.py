@@ -95,6 +95,7 @@ class CategorySummary(BaseModel):
 
 class AnalyticsSummary(BaseModel):
     total_expenses: float
+    current_month_expenses: float
     expense_count: int
     categories: List[CategorySummary]
     monthly_trend: List[dict]
@@ -309,6 +310,17 @@ async def get_analytics_summary(
     total_expenses = sum(exp["amount"] for exp in expenses)
     expense_count = len(expenses)
     
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
+
+    current_month_expenses = 0
+
+    for exp in expenses:
+        exp_date = datetime.fromisoformat(exp["date"])
+        if exp_date.year == current_year and exp_date.month == current_month:
+            current_month_expenses += exp["amount"]
+    
     # Group by category
     category_map = {}
     for exp in expenses:
@@ -332,6 +344,7 @@ async def get_analytics_summary(
     
     return AnalyticsSummary(
         total_expenses=total_expenses,
+        current_month_expenses=current_month_expenses,
         expense_count=expense_count,
         categories=categories,
         monthly_trend=monthly_trend
