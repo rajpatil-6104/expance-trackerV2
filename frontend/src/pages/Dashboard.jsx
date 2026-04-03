@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Wallet, Plus, TrendingUp, DollarSign, List, LogOut, IndianRupee } from 'lucide-react';
+import { Wallet, Plus, TrendingUp, DollarSign, List, LogOut,IndianRupee } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import DownloadCSV from '../components/DownloadCSV';
+import { Months } from 'react-day-picker';
 
 const CATEGORIES = [
   'Food',
@@ -20,11 +21,11 @@ const CATEGORIES = [
   'Shopping',
   'Health',
   'Bills',
-  'Rent',
+  'Rent' ,
   'Others'
 ];
 
-const COLORS = ['#2F5E41', '#D97706', '#44f744', '#78716C', '#0bf5f5', '#61c9a6', '#3B82F6', '#8B5CF6', '#EC4899'];
+const COLORS = ['#2F5E41', '#D97706', '#E8F3E8', '#78716C', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'];
 
 export default function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
@@ -38,6 +39,15 @@ export default function Dashboard({ user, onLogout }) {
     description: '',
     date: new Date().toISOString().split('T')[0]
   });
+  const monthlyTotals = recentExpenses.reduce((acc, expense) => {
+  const month = new Date(expense.date).toLocaleString("default", {
+    month: "short",
+    year: "numeric",
+  });
+
+  acc[month] = (acc[month] || 0) + expense.amount;
+  return acc;
+}, {});
 
   const fetchData = async () => {
     try {
@@ -46,7 +56,8 @@ export default function Dashboard({ user, onLogout }) {
         api.get('/expenses')
       ]);
       setAnalytics(analyticsRes.data);
-      setRecentExpenses(expensesRes.data.slice(0, 5));
+      //setRecentExpenses(expensesRes.data.slice(0, 5));//i ahve change this line of code 
+      setRecentExpenses(expensesRes.data);
     } catch (error) {
       toast.error('Failed to fetch data');
     } finally {
@@ -57,6 +68,16 @@ export default function Dashboard({ user, onLogout }) {
   useEffect(() => {
     fetchData();
   }, []);
+
+  //Function to handel to show the data of the expenses in the form of the pie chart and bar chart
+  const currentMonth = new Date().toISOString().slice(0, 7); // "2025-02"
+
+const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
+  if (exp.date.startsWith(currentMonth)) {
+    acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+  }
+  return acc;
+}, {});
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
@@ -82,17 +103,47 @@ export default function Dashboard({ user, onLogout }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        
+        {/*<div className="text-lg text-muted-foreground">Loading...</div>*/}
         <div className="loader"></div>
       </div>
     );
   }
 
-  const pieData = analytics?.categories.map((cat, idx) => ({
+ {/* const pieData = analytics?.categories.map((cat, idx) => ({
     name: cat.category,
     value: cat.total,
     color: COLORS[idx % COLORS.length]
-  })) || [];
+  })) || [];*/}
+
+ /*const pieData = analytics?.monthly_trend.map((m, idx) => ({
+  name: new Date(m.month + "-01").toLocaleString("default", { month: "short" }),
+  value: m.amount,
+  color: COLORS[idx % COLORS.length]
+})) || [];*/
+ const pieData = Object.keys(monthlyCategoryMap).map((cat, idx) => ({
+  name: cat,
+  value: monthlyCategoryMap[cat],
+  color: COLORS[idx % COLORS.length]
+}));
+
+//function for the total expenses of the month in new function
+//const currentMonth = new Date().toISOString().slice(0, 7);
+
+// Filter expenses of the current month
+const monthlyExpenses = recentExpenses.filter(exp =>
+  exp.date.startsWith(currentMonth)
+);
+
+// Total spent this month
+const monthlyTotal = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+// Total transactions this month
+const monthlyCount = monthlyExpenses.length;
+
+// Categories used this month
+const monthlyCategories = new Set(
+  monthlyExpenses.map(exp => exp.category)
+).size;
 
   return (
     <div className="min-h-screen bg-background">
@@ -224,7 +275,8 @@ export default function Dashboard({ user, onLogout }) {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="total-expenses" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                ₹{analytics?.current_month_expenses.toFixed(2) || '0.00'}
+              {/*  ₹{analytics?.total_expenses.toFixed(2) || '0.00'}{/*updated*/}
+              ₹{monthlyTotal.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">All time</p>
             </CardContent>
@@ -237,7 +289,7 @@ export default function Dashboard({ user, onLogout }) {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="transaction-count" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                {analytics?.expense_count || 0}
+                {monthlyCount}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Total recorded</p>
             </CardContent>
@@ -250,7 +302,7 @@ export default function Dashboard({ user, onLogout }) {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="category-count" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                {analytics?.categories.length || 0}
+                {monthlyCategories}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Active categories</p>
             </CardContent>
