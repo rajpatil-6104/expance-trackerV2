@@ -665,7 +665,95 @@ export default function Dashboard({ user, onLogout }) {
                 data-testid="add-expense-dialog"
                 className="max-w-[95vw] sm:max-w-lg"
               >
-                {/* ... form content ... */}
+<DialogHeader>
+                  <DialogTitle>Add New Expense</DialogTitle>
+                  <DialogDescription>
+                    Enter the details of your expense
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleAddExpense}>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="amount">Amount</Label>
+                      <Input
+                        id="amount"
+                        data-testid="expense-amount-input"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={expenseData.amount}
+                        onChange={(e) =>
+                          setExpenseData({
+                            ...expenseData,
+                            amount: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category</Label>
+                      <Select
+                        value={expenseData.category}
+                        onValueChange={(value) =>
+                          setExpenseData({ ...expenseData, category: value })
+                        }
+                      >
+                        <SelectTrigger data-testid="expense-category-select">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CATEGORIES.map((cat) => (
+                            <SelectItem key={cat} value={cat}>
+                              {cat}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Input
+                        id="description"
+                        data-testid="expense-description-input"
+                        placeholder="What was this expense for?"
+                        value={expenseData.description}
+                        onChange={(e) =>
+                          setExpenseData({
+                            ...expenseData,
+                            description: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="date">Date</Label>
+                      <Input
+                        id="date"
+                        data-testid="expense-date-input"
+                        type="date"
+                        value={expenseData.date}
+                        onChange={(e) =>
+                          setExpenseData({
+                            ...expenseData,
+                            date: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      type="submit"
+                      data-testid="expense-submit-button"
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      Add Expense
+                    </Button>
+                  </DialogFooter>
+                </form>
               </DialogContent>
             </Dialog>
           </div>
