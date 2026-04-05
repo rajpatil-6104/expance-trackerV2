@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+/*import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '../App';
@@ -103,23 +103,14 @@ const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        {/*<div className="text-lg text-muted-foreground">Loading...</div>*/}
         <div className="loader"></div>
       </div>
     );
   }
 
- {/* const pieData = analytics?.categories.map((cat, idx) => ({
-    name: cat.category,
-    value: cat.total,
-    color: COLORS[idx % COLORS.length]
-  })) || [];*/}
+ 
 
- /*const pieData = analytics?.monthly_trend.map((m, idx) => ({
-  name: new Date(m.month + "-01").toLocaleString("default", { month: "short" }),
-  value: m.amount,
-  color: COLORS[idx % COLORS.length]
-})) || [];*/
+
  const pieData = Object.keys(monthlyCategoryMap).map((cat, idx) => ({
   name: cat,
   value: monthlyCategoryMap[cat],
@@ -275,7 +266,6 @@ const monthlyCategories = new Set(
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold" data-testid="total-expenses" style={{ fontFamily: 'Manrope, sans-serif' }}>
-              {/*  ₹{analytics?.total_expenses.toFixed(2) || '0.00'}{/*updated*/}
               ₹{monthlyTotal.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">All time</p>
@@ -309,7 +299,6 @@ const monthlyCategories = new Set(
           </Card>
         </div>
 
-        {/* CSV Download Section */}
         <Card className="shadow-sm rounded-xl border-border mb-8">
           <CardHeader>
             <CardTitle style={{ fontFamily: 'Manrope, sans-serif' }}>Export Monthly Expenses</CardTitle>
@@ -402,6 +391,482 @@ const monthlyCategories = new Set(
                     <div className="text-lg font-semibold">₹{expense.amount.toFixed(2)}</div>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No expenses recorded yet. Start by adding your first expense!
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  );
+}
+*/
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { api } from "../App";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Wallet,
+  Plus,
+  TrendingUp,
+  DollarSign,
+  List,
+  LogOut,
+  IndianRupee,
+} from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from "recharts";
+import DownloadCSV from "../components/DownloadCSV";
+import { Months } from "react-day-picker";
+
+const CATEGORIES = [
+  "Food",
+  "Transport",
+  "Utilities",
+  "Entertainment",
+  "Shopping",
+  "Health",
+  "Bills",
+  "Rent",
+  "Others",
+];
+
+const COLORS = [
+  "#2F5E41",
+  "#D97706",
+  "#E8F3E8",
+  "#78716C",
+  "#F59E0B",
+  "#10B981",
+  "#3B82F6",
+  "#8B5CF6",
+];
+
+export default function Dashboard({ user, onLogout }) {
+  const [displayLimit, setDisplayLimit] = useState(5);
+  const navigate = useNavigate();
+  const [analytics, setAnalytics] = useState(null);
+  const [recentExpenses, setRecentExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [expenseData, setExpenseData] = useState({
+    amount: "",
+    category: "Food",
+    description: "",
+    date: new Date().toISOString().split("T")[0],
+  });
+  const monthlyTotals = recentExpenses.reduce((acc, expense) => {
+    const month = new Date(expense.date).toLocaleString("default", {
+      month: "short",
+      year: "numeric",
+    });
+
+    acc[month] = (acc[month] || 0) + expense.amount;
+    return acc;
+  }, {});
+
+  const fetchData = async () => {
+    try {
+      const [analyticsRes, expensesRes] = await Promise.all([
+        api.get("/analytics/summary"),
+        api.get("/expenses"),
+      ]);
+      setAnalytics(analyticsRes.data);
+      //setRecentExpenses(expensesRes.data.slice(0, 5));//i ahve change this line of code
+      setRecentExpenses(expensesRes.data);
+    } catch (error) {
+      toast.error("Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  //Function to handel to show the data of the expenses in the form of the pie chart and bar chart
+  const currentMonth = new Date().toISOString().slice(0, 7); // "2025-02"
+
+  const monthlyCategoryMap = recentExpenses.reduce((acc, exp) => {
+    if (exp.date.startsWith(currentMonth)) {
+      acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+    }
+    return acc;
+  }, {});
+
+  const handleAddExpense = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post("/expenses", {
+        ...expenseData,
+        amount: parseFloat(expenseData.amount),
+      });
+      toast.success("Expense added successfully!");
+      setDialogOpen(false);
+      setExpenseData({
+        amount: "",
+        category: "Food",
+        description: "",
+        date: new Date().toISOString().split("T")[0],
+      });
+      fetchData();
+    } catch (error) {
+      toast.error("Failed to add expense");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        {/*<div className="text-lg text-muted-foreground">Loading...</div>*/}
+        <div className="loader"></div>
+      </div>
+    );
+  }
+
+  const pieData = Object.keys(monthlyCategoryMap).map((cat, idx) => ({
+    name: cat,
+    value: monthlyCategoryMap[cat],
+    color: COLORS[idx % COLORS.length],
+  }));
+
+  const monthlyExpenses = recentExpenses.filter((exp) =>
+    exp.date.startsWith(currentMonth),
+  );
+
+  // Total spent this month
+  const monthlyTotal = monthlyExpenses.reduce(
+    (sum, exp) => sum + exp.amount,
+    0,
+  );
+
+  // Total transactions this month
+  const monthlyCount = monthlyExpenses.length;
+
+  // Categories used this month
+  const monthlyCategories = new Set(monthlyExpenses.map((exp) => exp.category))
+    .size;
+
+  return (
+    <div className="min-h-screen bg-background">
+      
+      <header className="bg-white/80 backdrop-blur-md border-b border-border shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          {/* Logo Section */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="bg-primary p-1.5 sm:p-2 rounded-lg">
+              <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+            </div>
+            <h1
+              className="text-xl sm:text-2xl font-bold tracking-tight"
+              style={{ fontFamily: "Manrope, sans-serif" }}
+            >
+              ExpenseZen
+            </h1>
+          </div>
+
+          {/* Actions Section */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Hidden on extra small screens, visible from small (sm) upwards */}
+            <span className="hidden sm:block text-sm text-muted-foreground truncate max-w-[150px]">
+              Hello, {user?.name}
+            </span>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onLogout}
+              data-testid="logout-button"
+              className="hover:bg-muted px-2 sm:px-3"
+            >
+              <LogOut className="h-4 w-4 sm:mr-2" />
+              {/* Text hidden on mobile, visible on small screens and up */}
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between mb-8">
+          {/* Left Section: Title & Subtitle */}
+          <div>
+            <h2
+              className="text-3xl sm:text-4xl font-bold mb-1 sm:mb-2"
+              style={{ fontFamily: "Manrope, sans-serif" }}
+            >
+              Dashboard
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Welcome back! Here's your expense overview
+            </p>
+          </div>
+
+          {/* Right Section: Action Buttons */}
+          <div className="flex gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/expenses")}
+              data-testid="view-all-expenses-button"
+              className="flex-1 sm:flex-none h-10 sm:h-11 rounded-lg text-xs sm:text-sm px-3 sm:px-4"
+            >
+              <List className="h-4 w-4 mr-1.5 sm:mr-2" />
+              <span className="inline">Expenses</span>
+              <span className="hidden xs:inline ml-1">View All</span>
+            </Button>
+
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  data-testid="add-expense-button"
+                  className="flex-1 sm:flex-none h-10 sm:h-11 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md text-xs sm:text-sm px-3 sm:px-4"
+                >
+                  <Plus className="h-4 w-4 mr-1.5 sm:mr-2" />
+                  Add Expense
+                </Button>
+              </DialogTrigger>
+              {/* Dialog content remains the same as it is already responsive by default in most UI libs */}
+              <DialogContent
+                data-testid="add-expense-dialog"
+                className="max-w-[95vw] sm:max-w-lg"
+              >
+                {/* ... form content ... */}
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl border-border hover-lift">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Expenses
+              </CardTitle>
+              <IndianRupee className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div
+                className="text-3xl font-bold"
+                data-testid="total-expenses"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
+                {/*  ₹{analytics?.total_expenses.toFixed(2) || '0.00'}{/*updated*/}
+                ₹{monthlyTotal.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">All time</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl border-border hover-lift">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Transactions
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div
+                className="text-3xl font-bold"
+                data-testid="transaction-count"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
+                {monthlyCount}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total recorded
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl border-border hover-lift">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Categories
+              </CardTitle>
+              <List className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div
+                className="text-3xl font-bold"
+                data-testid="category-count"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
+                {monthlyCategories}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Active categories
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* CSV Download Section */}
+        <Card className="shadow-sm rounded-xl border-border mb-8">
+          <CardHeader>
+            <CardTitle style={{ fontFamily: "Manrope, sans-serif" }}>
+              Export Monthly Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <p className="text-sm text-muted-foreground">
+                Download your expenses as CSV for any month
+              </p>
+              <DownloadCSV variant="outline" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card className="shadow-sm rounded-xl border-border">
+            <CardHeader>
+              <CardTitle style={{ fontFamily: "Manrope, sans-serif" }}>
+                Spending by Category
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  No expenses yet. Add your first expense!
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm rounded-xl border-border">
+            <CardHeader>
+              <CardTitle style={{ fontFamily: "Manrope, sans-serif" }}>
+                Monthly Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {analytics?.monthly_trend.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={analytics.monthly_trend}>
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar
+                      dataKey="amount"
+                      fill="#2F5E41"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  No expense trends to show yet
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+       
+        <Card className="shadow-sm rounded-xl border-border">
+          <CardHeader>
+            <CardTitle style={{ fontFamily: "Manrope, sans-serif" }}>
+              Recent Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentExpenses.length > 0 ? (
+              <div className="space-y-3">
+                {/* Slice the array from 0 to the current displayLimit */}
+                {recentExpenses.slice(0, displayLimit).map((expense) => (
+                  <div
+                    key={expense.id}
+                    data-testid="recent-expense-item"
+                    className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors duration-200"
+                  >
+                    <div>
+                      <p className="font-medium text-foreground">
+                        {expense.description}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {expense.category} •{" "}
+                        {new Date(expense.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div
+                      className="text-lg font-semibold text-foreground"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      ₹{expense.amount.toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Load More Button Logic */}
+                {displayLimit < recentExpenses.length && (
+                  <div className="pt-4 flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDisplayLimit((prev) => prev + 5)}
+                      className="w-full sm:w-auto text-muted-foreground hover:text-primary transition-all"
+                    >
+                      Load More
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
